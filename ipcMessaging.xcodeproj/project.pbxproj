@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		352BB2491825ABC200EAA412 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 352BB2481825ABC200EAA412 /* main.c */; };
 		352BB24B1825ABC200EAA412 /* ipcMessaging.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 352BB24A1825ABC200EAA412 /* ipcMessaging.1 */; };
+		352BB2521825DC1000EAA412 /* ipcMessaging.c in Sources */ = {isa = PBXBuildFile; fileRef = 352BB2511825DC1000EAA412 /* ipcMessaging.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,8 @@
 		352BB2451825ABC200EAA412 /* ipcMessaging */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ipcMessaging; sourceTree = BUILT_PRODUCTS_DIR; };
 		352BB2481825ABC200EAA412 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		352BB24A1825ABC200EAA412 /* ipcMessaging.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ipcMessaging.1; sourceTree = "<group>"; };
+		352BB2511825DC1000EAA412 /* ipcMessaging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipcMessaging.c; sourceTree = "<group>"; };
+		352BB2531825DC1900EAA412 /* ipcMessaging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ipcMessaging.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +65,8 @@
 			children = (
 				352BB2481825ABC200EAA412 /* main.c */,
 				352BB24A1825ABC200EAA412 /* ipcMessaging.1 */,
+				352BB2511825DC1000EAA412 /* ipcMessaging.c */,
+				352BB2531825DC1900EAA412 /* ipcMessaging.h */,
 			);
 			path = ipcMessaging;
 			sourceTree = "<group>";
@@ -118,6 +123,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				352BB2491825ABC200EAA412 /* main.c in Sources */,
+				352BB2521825DC1000EAA412 /* ipcMessaging.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

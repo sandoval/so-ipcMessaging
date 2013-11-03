@@ -7,12 +7,16 @@
 //
 
 #include <stdio.h>
+#include "ipcMessaging.h"
 
 int main(int argc, const char * argv[])
 {
-
-    // insert code here...
-    printf("Hello, World!\n");
+    nodeList* nodes;
+    nodeInfo node;
+    for (int i = 0; i < 9; i++) {
+        node.id = i;
+        nodes = connectedNodes(node);
+    }
     return 0;
 }
 
