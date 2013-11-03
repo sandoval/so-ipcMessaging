@@ -9,16 +9,19 @@
 #ifndef ipcMessaging_ipcMessaging_h
 #define ipcMessaging_ipcMessaging_h
 
-typedef struct nodeInfo {
-    int id;
-    int msgid;
-} nodeInfo;
+typedef struct message {
+    long mtype;
+    long messageId;
+    int source;
+    int destination;
+    long referencedMessageId;
+    char text[200];
+} message;
 
-typedef struct nodeList {
-    nodeInfo *node;
-    struct nodeList *next;
-} nodeList;
+int sendMessage(message* message);
 
-nodeList* connectedNodes(nodeInfo node);
+int setup(int nodeId);
+
+int tearDown();
 
 #endif

@@ -12,26 +12,189 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
 
+typedef struct nodeInfo nodeInfo;
+typedef struct nodeList nodeList;
 
+struct nodeInfo {
+    int id;
+    int msgid;
+    nodeList* connectedNodes;
+};
+
+struct nodeList {
+    nodeInfo *node;
+    nodeList *next;
+};
 
 int queueIdForNode(nodeInfo node);
 nodeList* initNodeList();
+nodeList* calculateConnectedNodes(nodeInfo node);
+int freeNodeList(nodeList* nodes);
+
+//Determines to which node the message should be sent.
+nodeInfo* nextNodeInRoute(message* message);
+
+//Connects to node by getting a reference to it's message queue.
+int connectNode(nodeInfo* node);
+
+//Method that executes periodically to check and treat new messages.
+void watchdog();
+
+//Method that sends messages to destination or next node in route.
+int sendMessage(message* message);
 
 nodeInfo thisNode;
+long currentMessageId = 0;
 
 int setup(int nodeId) {
+    struct sigaction action;
+    
     thisNode.id = nodeId;
-    thisNode.msgid = msgget(queueIdForNode(thisNode), IPC_CREAT | 0006);
+    thisNode.msgid = msgget(queueIdForNode(thisNode), IPC_CREAT | 0600);
+    
+    action.sa_handler = watchdog;
+    sigaction(SIGALRM, &action, NULL);
+    
     if (thisNode.msgid == -1) {
-        printf("Failed to create/retrieve queue for node %d: errno %d", thisNode.id, errno);
+        printf("Failed to create/retrieve queue for node %d: errno %d\n", thisNode.id, errno);
         exit(1);
+    }
+    thisNode.connectedNodes = calculateConnectedNodes(thisNode);
+    
+    alarm(1);
+    return 0;
+}
+
+int tearDown() {
+    msgctl(thisNode.msgid, IPC_RMID, NULL);
+    freeNodeList(thisNode.connectedNodes);
+    return 0;
+}
+
+void watchdog() {
+    message message;
+    while (msgrcv(thisNode.msgid, &message, sizeof(message) - sizeof(long), 0, IPC_NOWAIT) != -1) {
+        printf("Node %d received message %ld\n", thisNode.id, message.messageId);
+        if (message.destination != thisNode.id) {
+            sendMessage(&message);
+            printf("Node %d is passing the message %ld along\n", thisNode.id, message.messageId);
+        }
+    }
+    alarm(1);
+}
+
+int sendMessage(message* message) {
+    nodeInfo* nodeToSend;
+    
+    //Cannot send a message to itself.
+    if (message->destination == thisNode.id) {
+        printf("Cannot send message to itself!\n");
+        return -1;
+    }
+    
+    nodeToSend = nextNodeInRoute(message);
+    //Unknown routing error.
+    if (nodeToSend == NULL) {
+        printf("Unknown routing error!\n");
+        return -2;
+    }
+    
+    
+    if (connectNode(nodeToSend) != 0) {
+        printf("Couldn't connect to node %d!\n", nodeToSend->id);
+        return -3;
+    }
+    
+    message->messageId = currentMessageId++;
+    
+    if(msgsnd(nodeToSend->msgid, message, sizeof(message) - sizeof(long), 0) == 0) {
+        printf("Error sending message!\n");
+        return -4;
     }
     
     return 0;
 }
 
-nodeList* connectedNodes(nodeInfo node) {
+nodeInfo* nextNodeInRoute(message* message) {
+    int destination;
+    nodeList *currentNode, *selectedNode = NULL;
+    //This is the node to which the message is destined.
+    if (message->destination == thisNode.id)
+        return NULL;
+    
+    destination = message->destination;
+    //Translation needed in order to guide the message to node zero if it's destination is the printer!
+    if (destination == INT_MAX && thisNode.id != 0)
+        destination = 0;
+    
+    //Searches for direct connections to destination node. Returns the node if found said connection.
+    currentNode = thisNode.connectedNodes;
+    while (currentNode != NULL) {
+        if (currentNode->node->id == destination)
+            return currentNode->node;
+        currentNode = currentNode->next;
+    }
+    
+    currentNode = thisNode.connectedNodes;
+    selectedNode = currentNode;
+    if (destination > thisNode.id) {
+        //Destination node has greater id than this node. We must route it to the connected node with the greatest id.
+        while (currentNode != NULL) {
+            if (currentNode->node->id > selectedNode->node->id)
+                selectedNode = currentNode;
+            currentNode = currentNode->next;
+        }
+    } else {
+        //Destination node has lower id than this node. We must route it to the connected node with the lowest id.
+        while (currentNode != NULL) {
+            if (currentNode->node->id < selectedNode->node->id)
+                selectedNode = currentNode;
+            currentNode = currentNode->next;
+        }
+    }
+    
+    if (selectedNode != NULL)
+        return selectedNode->node;
+    return NULL;
+}
+
+int connectNode(nodeInfo* node) {
+    if (node == NULL)
+        return -1;
+    
+    if (node->msgid != -1)
+        return 0;
+    else {
+        int i = 2;
+        node->msgid = msgget(queueIdForNode(*node), 0);
+        while ((node->msgid == -1) && (i > 0)) {
+            sleep(1);
+            node->msgid = msgget(queueIdForNode(*node), 0);
+            i--;
+        }
+    }
+    if (node->msgid != -1)
+        return 0;
+    else
+        return -1;
+}
+
+int freeNodeList(nodeList* nodes) {
+    nodeList* nextNode;
+    while (nodes != NULL) {
+        nextNode = nodes->next;
+        if (nodes->node != NULL)
+            free(nodes->node);
+        free(nodes);
+        nodes = nextNode;
+    }
+    return 0;
+}
+
+nodeList* calculateConnectedNodes(nodeInfo node) {
     nodeList *nodes, *currentNode;
     int currentNodeIsResolved = 0;
     const int meshSize = 3;
@@ -94,9 +257,16 @@ nodeList* connectedNodes(nodeInfo node) {
     return nodes;
 }
 
+nodeInfo* initNode() {
+    nodeInfo* node = malloc(sizeof(nodeInfo));
+    node->connectedNodes = NULL;
+    node->msgid = -1;
+    return node;
+}
+
 nodeList* initNodeList() {
     nodeList* list = malloc(sizeof(nodeList));
-    list->node = malloc(sizeof(nodeInfo));
+    list->node = initNode();
     list->next = NULL;
     return list;
 }
