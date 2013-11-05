@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 
 typedef struct nodeInfo nodeInfo;
 typedef struct nodeList nodeList;
@@ -44,19 +43,14 @@ int connectNode(nodeInfo* node);
 void watchdog();
 
 //Method that sends messages to destination or next node in route.
-int sendMessage(message* message);
+int sendMessage(message* msg);
 
 nodeInfo thisNode;
 long currentMessageId = 0;
 
 int setup(int nodeId) {
-    struct sigaction action;
-    
     thisNode.id = nodeId;
     thisNode.msgid = msgget(queueIdForNode(thisNode), IPC_CREAT | 0600);
-    
-    action.sa_handler = watchdog;
-    sigaction(SIGALRM, &action, NULL);
     
     if (thisNode.msgid == -1) {
         printf("Failed to create/retrieve queue for node %d: errno %d\n", thisNode.id, errno);
@@ -64,7 +58,6 @@ int setup(int nodeId) {
     }
     thisNode.connectedNodes = calculateConnectedNodes(thisNode);
     
-    alarm(1);
     return 0;
 }
 
@@ -75,27 +68,33 @@ int tearDown() {
 }
 
 void watchdog() {
-    message message;
-    while (msgrcv(thisNode.msgid, &message, sizeof(message) - sizeof(long), 0, IPC_NOWAIT) != -1) {
-        printf("Node %d received message %ld\n", thisNode.id, message.messageId);
-        if (message.destination != thisNode.id) {
-            sendMessage(&message);
-            printf("Node %d is passing the message %ld along\n", thisNode.id, message.messageId);
+    message* msg = malloc(sizeof(message));
+    ssize_t errorCheck;
+
+    while ((errorCheck = msgrcv(thisNode.msgid, msg, sizeof(message) - sizeof(long int), 0, 0)) != (ssize_t)-1) {
+        if (msg->mdata.destination != thisNode.id) {
+            sendMessage(msg);
+            //printf("Node %d passing along message %ld from %d of size %ld (queue %d)\n", thisNode.id, msg->mdata.messageId, msg->mdata.source, errorCheck, thisNode.msgid);
+        } else {
+            printf("Node %d received message %ld from %d of size %ld (queue %d)\n", thisNode.id, msg->mdata.messageId, msg->mdata.source, errorCheck, thisNode.msgid);
         }
     }
-    alarm(1);
+    if (errorCheck == (ssize_t)-1) {
+        printf("An error occured while trying to receive message: %d\n", errno);
+    }
+    free(msg);
 }
 
-int sendMessage(message* message) {
+int sendMessage(message* msg) {
     nodeInfo* nodeToSend;
     
     //Cannot send a message to itself.
-    if (message->destination == thisNode.id) {
+    if (msg->mdata.destination == thisNode.id) {
         printf("Cannot send message to itself!\n");
         return -1;
     }
     
-    nodeToSend = nextNodeInRoute(message);
+    nodeToSend = nextNodeInRoute(msg);
     //Unknown routing error.
     if (nodeToSend == NULL) {
         printf("Unknown routing error!\n");
@@ -108,9 +107,12 @@ int sendMessage(message* message) {
         return -3;
     }
     
-    message->messageId = currentMessageId++;
-    
-    if(msgsnd(nodeToSend->msgid, message, sizeof(message) - sizeof(long), 0) == -1) {
+    if (msg->mdata.source == thisNode.id) {
+        msg->mdata.messageId = currentMessageId++;
+        printf("Node %d will send message!\n", msg->mdata.source);
+    }
+
+    if(msgsnd(nodeToSend->msgid, msg, sizeof(message) - sizeof(long int), 0) == -1) {
         printf("Error sending message!\n");
         return -4;
     }
@@ -122,10 +124,10 @@ nodeInfo* nextNodeInRoute(message* message) {
     int destination;
     nodeList *currentNode, *selectedNode = NULL;
     //This is the node to which the message is destined.
-    if (message->destination == thisNode.id)
+    if (message->mdata.destination == thisNode.id)
         return NULL;
     
-    destination = message->destination;
+    destination = message->mdata.destination;
     //Translation needed in order to guide the message to node zero if it's destination is the printer!
     if (destination == INT_MAX && thisNode.id != 0)
         destination = 0;

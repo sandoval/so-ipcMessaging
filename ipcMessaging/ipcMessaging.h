@@ -10,17 +10,21 @@
 #define ipcMessaging_ipcMessaging_h
 
 typedef struct message {
-    long mtype;
-    long messageId;
-    int source;
-    int destination;
-    long referencedMessageId;
-    char text[200];
+    long int mtype;
+    struct data {
+        long messageId;
+        int source;
+        int destination;
+        long referencedMessageId;
+        char text[200];
+    } mdata;
 } message;
 
-int sendMessage(message* message);
+int sendMessage(message* msg);
 
 int setup(int nodeId);
+
+void watchdog();
 
 int tearDown();
 
