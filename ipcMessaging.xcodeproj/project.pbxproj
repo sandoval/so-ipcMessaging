@@ -7,34 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		352BB2491825ABC200EAA412 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 352BB2481825ABC200EAA412 /* main.c */; };
-		352BB24B1825ABC200EAA412 /* ipcMessaging.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 352BB24A1825ABC200EAA412 /* ipcMessaging.1 */; };
-		352BB2521825DC1000EAA412 /* ipcMessaging.c in Sources */ = {isa = PBXBuildFile; fileRef = 352BB2511825DC1000EAA412 /* ipcMessaging.c */; };
+		352BB27D18286CC300EAA412 /* ipcMessaging.c in Sources */ = {isa = PBXBuildFile; fileRef = 352BB2511825DC1000EAA412 /* ipcMessaging.c */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		352BB2431825ABC200EAA412 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-				352BB24B1825ABC200EAA412 /* ipcMessaging.1 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		352BB2451825ABC200EAA412 /* ipcMessaging */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ipcMessaging; sourceTree = BUILT_PRODUCTS_DIR; };
-		352BB2481825ABC200EAA412 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		352BB24A1825ABC200EAA412 /* ipcMessaging.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ipcMessaging.1; sourceTree = "<group>"; };
 		352BB2511825DC1000EAA412 /* ipcMessaging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipcMessaging.c; sourceTree = "<group>"; };
 		352BB2531825DC1900EAA412 /* ipcMessaging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ipcMessaging.h; sourceTree = "<group>"; };
+		352BB25818286A1900EAA412 /* libipcMsgLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libipcMsgLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		352BB2421825ABC200EAA412 /* Frameworks */ = {
+		352BB25518286A1900EAA412 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -55,7 +39,7 @@
 		352BB2461825ABC200EAA412 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				352BB2451825ABC200EAA412 /* ipcMessaging */,
+				352BB25818286A1900EAA412 /* libipcMsgLib.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,7 +47,6 @@
 		352BB2471825ABC200EAA412 /* ipcMessaging */ = {
 			isa = PBXGroup;
 			children = (
-				352BB2481825ABC200EAA412 /* main.c */,
 				352BB24A1825ABC200EAA412 /* ipcMessaging.1 */,
 				352BB2511825DC1000EAA412 /* ipcMessaging.c */,
 				352BB2531825DC1900EAA412 /* ipcMessaging.h */,
@@ -73,23 +56,33 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		352BB25618286A1900EAA412 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
-		352BB2441825ABC200EAA412 /* ipcMessaging */ = {
+		352BB25718286A1900EAA412 /* ipcMsgLib */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 352BB24E1825ABC200EAA412 /* Build configuration list for PBXNativeTarget "ipcMessaging" */;
+			buildConfigurationList = 352BB25918286A1900EAA412 /* Build configuration list for PBXNativeTarget "ipcMsgLib" */;
 			buildPhases = (
-				352BB2411825ABC200EAA412 /* Sources */,
-				352BB2421825ABC200EAA412 /* Frameworks */,
-				352BB2431825ABC200EAA412 /* CopyFiles */,
+				352BB25418286A1900EAA412 /* Sources */,
+				352BB25518286A1900EAA412 /* Frameworks */,
+				352BB25618286A1900EAA412 /* Headers */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = ipcMessaging;
-			productName = ipcMessaging;
-			productReference = 352BB2451825ABC200EAA412 /* ipcMessaging */;
-			productType = "com.apple.product-type.tool";
+			name = ipcMsgLib;
+			productName = ipcMsgLib;
+			productReference = 352BB25818286A1900EAA412 /* libipcMsgLib.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -112,18 +105,17 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				352BB2441825ABC200EAA412 /* ipcMessaging */,
+				352BB25718286A1900EAA412 /* ipcMsgLib */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		352BB2411825ABC200EAA412 /* Sources */ = {
+		352BB25418286A1900EAA412 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				352BB2491825ABC200EAA412 /* main.c in Sources */,
-				352BB2521825DC1000EAA412 /* ipcMessaging.c in Sources */,
+				352BB27D18286CC300EAA412 /* ipcMessaging.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -198,16 +190,22 @@
 			};
 			name = Release;
 		};
-		352BB24F1825ABC200EAA412 /* Debug */ = {
+		352BB25A18286A1900EAA412 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		352BB2501825ABC200EAA412 /* Release */ = {
+		352BB25B18286A1900EAA412 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -224,13 +222,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		352BB24E1825ABC200EAA412 /* Build configuration list for PBXNativeTarget "ipcMessaging" */ = {
+		352BB25918286A1900EAA412 /* Build configuration list for PBXNativeTarget "ipcMsgLib" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				352BB24F1825ABC200EAA412 /* Debug */,
-				352BB2501825ABC200EAA412 /* Release */,
+				352BB25A18286A1900EAA412 /* Debug */,
+				352BB25B18286A1900EAA412 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

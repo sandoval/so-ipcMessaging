@@ -110,7 +110,7 @@ int sendMessage(message* message) {
     
     message->messageId = currentMessageId++;
     
-    if(msgsnd(nodeToSend->msgid, message, sizeof(message) - sizeof(long), 0) == 0) {
+    if(msgsnd(nodeToSend->msgid, message, sizeof(message) - sizeof(long), 0) == -1) {
         printf("Error sending message!\n");
         return -4;
     }

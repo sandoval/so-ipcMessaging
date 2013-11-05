@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>ipcMessaging.xcscheme</key>
+		<key>ipcMsgLib.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
@@ -13,6 +13,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>352BB2441825ABC200EAA412</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>352BB25718286A1900EAA412</key>
 		<dict>
 			<key>primary</key>
 			<true/>
