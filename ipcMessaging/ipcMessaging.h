@@ -24,7 +24,12 @@ int sendMessage(message* msg);
 
 int setup(int nodeId);
 
-void watchdog();
+/**
+ * Function that blocks waiting for message of type mtype.
+ * mtype type of message to be received. Causes same behavior of mtype in msgrcv.
+ * callback function that will be called when message is received.
+ */
+void listenForMessages(int mtype, void (*callback)(message*));
 
 int tearDown();
 

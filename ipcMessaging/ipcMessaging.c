@@ -67,16 +67,15 @@ int tearDown() {
     return 0;
 }
 
-void watchdog() {
+void listenForMessages(int mtype, void (*callback)(message*)) {
     message* msg = malloc(sizeof(message));
     ssize_t errorCheck;
 
-    while ((errorCheck = msgrcv(thisNode.msgid, msg, sizeof(message) - sizeof(long int), 0, 0)) != (ssize_t)-1) {
+    while ((errorCheck = msgrcv(thisNode.msgid, msg, sizeof(message) - sizeof(long int), mtype, 0)) != (ssize_t)-1) {
         if (msg->mdata.destination != thisNode.id) {
             sendMessage(msg);
-            //printf("Node %d passing along message %ld from %d of size %ld (queue %d)\n", thisNode.id, msg->mdata.messageId, msg->mdata.source, errorCheck, thisNode.msgid);
         } else {
-            printf("Node %d received message %ld from %d of size %ld (queue %d)\n", thisNode.id, msg->mdata.messageId, msg->mdata.source, errorCheck, thisNode.msgid);
+            callback(msg);
         }
     }
     if (errorCheck == (ssize_t)-1) {
