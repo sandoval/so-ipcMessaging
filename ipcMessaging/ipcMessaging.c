@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 typedef struct nodeInfo nodeInfo;
 typedef struct nodeList nodeList;
@@ -61,6 +62,7 @@ messageList *putMessage(message *msg, messageList *list);
 
 nodeInfo thisNode;
 long currentMessageId = 0;
+pthread_mutex_t connectionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int setup(int nodeId) {
     thisNode.id = nodeId;
@@ -200,9 +202,11 @@ int connectNode(nodeInfo* node) {
     if (node == NULL)
         return -1;
     
-    if (node->msgid != -1)
+    pthread_mutex_lock(&connectionMutex);
+    if (node->msgid != -1) {
+        pthread_mutex_unlock(&connectionMutex);
         return 0;
-    else {
+    } else {
         int i = 2;
         node->msgid = msgget(queueIdForNode(*node), 0);
         while ((node->msgid == -1) && (i > 0)) {
@@ -210,6 +214,7 @@ int connectNode(nodeInfo* node) {
             node->msgid = msgget(queueIdForNode(*node), 0);
             i--;
         }
+        pthread_mutex_unlock(&connectionMutex);
     }
     if (node->msgid != -1)
         return 0;
