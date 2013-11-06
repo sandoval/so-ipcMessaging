@@ -12,7 +12,7 @@
 typedef struct message {
     long int mtype;
     struct data {
-        long messageId;
+        long int messageId;
         int source;
         int destination;
         long referencedMessageId;

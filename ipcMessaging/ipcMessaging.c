@@ -16,6 +16,7 @@
 
 typedef struct nodeInfo nodeInfo;
 typedef struct nodeList nodeList;
+typedef struct messageList messageList;
 
 struct nodeInfo {
     int id;
@@ -26,6 +27,12 @@ struct nodeInfo {
 struct nodeList {
     nodeInfo *node;
     nodeList *next;
+};
+
+struct messageList {
+    message *message;
+    messageList *next;
+    messageList *previous;
 };
 
 int queueIdForNode(nodeInfo node);
@@ -42,8 +49,15 @@ int connectNode(nodeInfo* node);
 //Method that executes periodically to check and treat new messages.
 void watchdog();
 
-//Method that sends messages to destination or next node in route.
-int sendMessage(message* msg);
+//Internal method that sends messages to destination or next node in route.
+//May be used for routing existing messages and doesn't set source.
+int _sendMessage(message* msg);
+
+//UNUSED
+//Methods that handle message lists.
+messageList *initMessageList();
+message *takeMessageOfType(int type, messageList *list);
+messageList *putMessage(message *msg, messageList *list);
 
 nodeInfo thisNode;
 long currentMessageId = 0;
@@ -73,7 +87,7 @@ void listenForMessages(int mtype, void (*callback)(message*)) {
 
     while ((errorCheck = msgrcv(thisNode.msgid, msg, sizeof(message) - sizeof(long int), mtype, 0)) != (ssize_t)-1) {
         if (msg->mdata.destination != thisNode.id) {
-            sendMessage(msg);
+            _sendMessage(msg);
         } else {
             callback(msg);
         }
@@ -84,7 +98,12 @@ void listenForMessages(int mtype, void (*callback)(message*)) {
     free(msg);
 }
 
-int sendMessage(message* msg) {
+int sendMessage(message *msg) {
+    msg->mdata.source = thisNode.id;
+    return _sendMessage(msg);
+}
+
+int _sendMessage(message* msg) {
     nodeInfo* nodeToSend;
     
     //Cannot send a message to itself.
@@ -94,6 +113,7 @@ int sendMessage(message* msg) {
     }
     
     nodeToSend = nextNodeInRoute(msg);
+    //printf("[NODE %d] Sending message (%d->%d) to node %d\n", thisNode.id, msg->mdata.source, msg->mdata.destination, nodeToSend->id);
     //Unknown routing error.
     if (nodeToSend == NULL) {
         printf("Unknown routing error!\n");
@@ -108,7 +128,6 @@ int sendMessage(message* msg) {
     
     if (msg->mdata.source == thisNode.id) {
         msg->mdata.messageId = currentMessageId++;
-        printf("Node %d will send message!\n", msg->mdata.source);
     }
 
     if(msgsnd(nodeToSend->msgid, msg, sizeof(message) - sizeof(long int), 0) == -1) {
@@ -128,7 +147,7 @@ nodeInfo* nextNodeInRoute(message* message) {
     
     destination = message->mdata.destination;
     //Translation needed in order to guide the message to node zero if it's destination is the printer!
-    if (destination == INT_MAX && thisNode.id != 0)
+    if ((destination == INT_MAX && thisNode.id != 0) || (thisNode.id == INT_MAX))
         destination = 0;
     
     //Searches for direct connections to destination node. Returns the node if found said connection.
@@ -140,18 +159,33 @@ nodeInfo* nextNodeInRoute(message* message) {
     }
     
     currentNode = thisNode.connectedNodes;
-    selectedNode = currentNode;
     if (destination > thisNode.id) {
         //Destination node has greater id than this node. We must route it to the connected node with the greatest id.
         while (currentNode != NULL) {
-            if (currentNode->node->id > selectedNode->node->id)
+            if ((currentNode->node->id != INT_MAX) && (currentNode->node->id > thisNode.id) && (currentNode->node->id < destination)) {
+                //First match.
+                selectedNode = currentNode;
+                break;
+            }
+            currentNode = currentNode->next;
+        }
+        while ((selectedNode != NULL) && (currentNode != NULL)) {
+            //Best match.
+            if ((currentNode->node->id != INT_MAX) && (currentNode->node->id > selectedNode->node->id) && (currentNode->node->id < destination))
                 selectedNode = currentNode;
             currentNode = currentNode->next;
         }
     } else {
         //Destination node has lower id than this node. We must route it to the connected node with the lowest id.
         while (currentNode != NULL) {
-            if (currentNode->node->id < selectedNode->node->id)
+            if (currentNode->node->id < thisNode.id && currentNode->node->id > destination) {
+                selectedNode = currentNode;
+                break;
+            }
+            currentNode = currentNode->next;
+        }
+        while ((selectedNode != NULL) && (currentNode != NULL)) {
+            if (currentNode->node->id < selectedNode->node->id && currentNode->node->id > destination)
                 selectedNode = currentNode;
             currentNode = currentNode->next;
         }
@@ -256,6 +290,42 @@ nodeList* calculateConnectedNodes(nodeInfo node) {
     }
     
     return nodes;
+}
+
+messageList *initMessageList() {
+    messageList *list = malloc(sizeof(messageList));
+    list->message = NULL;
+    list->next = NULL;
+    list->previous = NULL;
+    return list;
+}
+
+message *takeMessageOfType(int type, messageList *list) {
+    message *msg = NULL;
+    while (list != NULL) {
+        if (list->message->mtype == type) {
+            if (list->next != NULL)
+                list->next->previous = list->previous;
+            if (list->previous != NULL)
+                list->previous->next = list->next;
+            msg = list->message;
+            free(list);
+        }
+    }
+    return msg;
+}
+
+messageList *putMessage(message *msg, messageList *list) {
+    messageList* element = initMessageList();
+    element->message = msg;
+    if (list == NULL)
+        return element;
+    while (list->next != NULL) {
+        list = list->next;
+    }
+    element->previous = list;
+    list->next = element;
+    return element;
 }
 
 nodeInfo* initNode() {
